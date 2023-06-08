@@ -4,10 +4,6 @@ import re
 import time
 import os
 
-if len(sys.argv) < 2:
-  raise IndexError("Cookie not provided. Pass in your cookie as the next argument. Like 'python3 main.py \"cookie_here\"'")
-
-cookie = sys.argv[1]
 graphql_url = "https://replit.com/graphql"
 graphql_headers = {
   "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0",
@@ -21,7 +17,6 @@ graphql_headers = {
   "Pragma": "no-cache",
   "Cache-Control": "no-cache",
   "Referrer": "https://replit.com/search",
-  "Cookie": cookie
 }
 
 with open("graphql/SearchPageSearchResults.graphql") as f:
@@ -31,7 +26,6 @@ known_keys = []
 if os.path.exists("found_keys.txt"):
   with open("found_keys.txt") as f:
     known_keys = f.read().strip().split("\n")
-print(known_keys)
 
 def perform_search(query, page, sort):
   payload = [{
@@ -91,12 +85,12 @@ def log_key(key):
   with open("found_keys.txt", "a") as f:
     f.write(key + "\n")
 
-def search_all_pages(query, sort):
+def search_all_pages(query):
   found_keys = []
   valid_keys = []
   for page in range(1, 21):
-    print(f"Checking page {page}, sorting by {sort}...")
-    keys = perform_search(query, page, sort)
+    print(f"Checking page {page}...")
+    keys = perform_search(query, page, "RecentlyModified")
     print(f"Found {len(keys)} matches (not validated)")
 
     for key in keys:
@@ -113,15 +107,17 @@ def search_all_pages(query, sort):
 
   return valid_keys
 
-def search_all_sorts(query):
-  sorts = ["RecentlyModified", "Relevant"]
-  found_keys = []
+if __name__ == "__main__":
+  if len(sys.argv) < 2:
+    raise IndexError("Cookie not provided. Pass in your cookie as the next argument. Like 'python3 main.py \"cookie_here\"'")
+  cookie = sys.argv[1]
+  graphql_headers["Cookie"] = cookie
 
-  for sort in sorts:
-    found_keys += search_all_pages(query, sort)
-  
-  return found_keys
+  if len(sys.argv) > 2:
+    query = sys.argv[2]
+  else:
+    query = "sk- openai"
 
-all_keys = search_all_sorts("sk- openai")
-for key in all_keys:
-  print(key)
+  print(f"Searching with query: {query}")
+  all_keys = search_all_pages(query)
+  print("Search complete. Check found_keys.txt for results.")
