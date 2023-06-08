@@ -1,0 +1,576 @@
+query SearchPageSearchResults($options: SearchQueryOptions!) {
+  search(options: $options) {
+    ...SearchPageResults
+    ... on UserError {
+      message
+      __typename
+    }
+    ... on UnauthorizedError {
+      message
+      __typename
+    }
+    ... on TooManyRequestsError {
+      message
+      __typename
+    }
+    __typename
+  }
+}
+
+fragment SearchPageResults on SearchQueryResults {
+  userResults {
+    hitInfo {
+      ...HitInfo
+      __typename
+    }
+    results {
+      pageInfo {
+        ...PageInfo
+        __typename
+      }
+      items {
+        id
+        ...SearchPageResultsUser
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  replResults {
+    hitInfo {
+      ...HitInfo
+      __typename
+    }
+    results {
+      pageInfo {
+        ...PageInfo
+        __typename
+      }
+      items {
+        id
+        ...SearchPageResultsRepl
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  templateResults {
+    hitInfo {
+      ...HitInfo
+      __typename
+    }
+    results {
+      pageInfo {
+        ...PageInfo
+        __typename
+      }
+      items {
+        id
+        ...SearchPageResultsTemplate
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  postResults {
+    hitInfo {
+      ...HitInfo
+      __typename
+    }
+    results {
+      pageInfo {
+        ...PageInfo
+        __typename
+      }
+      items {
+        id
+        ...SearchPageResultsPost
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  docResults {
+    hitInfo {
+      ...HitInfo
+      __typename
+    }
+    results {
+      pageInfo {
+        ...PageInfo
+        __typename
+      }
+      items {
+        ...SearchPageResultsDoc
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  fileResults {
+    hitInfo {
+      ...HitInfo
+      __typename
+    }
+    results {
+      pageInfo {
+        ...PageInfo
+        __typename
+      }
+      items {
+        ...SearchPageResultsFile
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  __typename
+}
+
+fragment HitInfo on SearchQueryHitInfo {
+  totalHits
+  totalPages
+  __typename
+}
+
+fragment PageInfo on PageInfo {
+  hasPreviousPage
+  hasNextPage
+  nextCursor
+  previousCursor
+  __typename
+}
+
+fragment SearchPageResultsUser on User {
+  id
+  username
+  fullName
+  bio
+  image
+  url
+  ...UserRoles
+  __typename
+}
+
+fragment UserRoles on User {
+  roles(
+    only: [ADMIN, MODERATOR, PATRON, PYTHONISTA, DETECTIVE, LANGUAGE_JAMMER, FEATURED, REPLIT_REP, REPLIT_REP_EDU]
+  ) {
+    id
+    name
+    key
+    tagline
+    __typename
+  }
+  __typename
+}
+
+fragment SearchPageResultsRepl on Repl {
+  id
+  ...ReplPostReplCardRepl
+  __typename
+}
+
+fragment ReplPostReplCardRepl on Repl {
+  id
+  iconUrl
+  description(plainText: true)
+  ...ReplPostReplInfoRepl
+  ...ReplStatsRepl
+  ...ReplLinkRepl
+  tags {
+    id
+    ...PostsFeedNavTag
+    __typename
+  }
+  owner {
+    ... on Team {
+      id
+      username
+      url
+      image
+      __typename
+    }
+    ... on User {
+      id
+      username
+      url
+      image
+      __typename
+    }
+    __typename
+  }
+  __typename
+}
+
+fragment ReplPostReplInfoRepl on Repl {
+  id
+  title
+  description(plainText: true)
+  imageUrl
+  iconUrl
+  templateInfo {
+    label
+    iconUrl
+    __typename
+  }
+  __typename
+}
+
+fragment ReplStatsRepl on Repl {
+  id
+  likeCount
+  runCount
+  commentCount
+  __typename
+}
+
+fragment ReplLinkRepl on Repl {
+  id
+  url
+  nextPagePathname
+  __typename
+}
+
+fragment PostsFeedNavTag on Tag {
+  id
+  isOfficial
+  __typename
+}
+
+fragment SearchPageResultsTemplate on Repl {
+  id
+  ...TemplateReplCardRepl
+  __typename
+}
+
+fragment TemplateReplCardRepl on Repl {
+  id
+  iconUrl
+  templateCategory
+  title
+  description(plainText: true)
+  releasesForkCount
+  templateLabel
+  likeCount
+  url
+  owner {
+    ... on User {
+      id
+      ...TemplateReplCardFooterUser
+      __typename
+    }
+    ... on Team {
+      id
+      ...TemplateReplCardFooterTeam
+      __typename
+    }
+    __typename
+  }
+  deployment {
+    id
+    activeRelease {
+      id
+      __typename
+    }
+    __typename
+  }
+  publishedAs
+  __typename
+}
+
+fragment TemplateReplCardFooterUser on User {
+  id
+  username
+  image
+  url
+  __typename
+}
+
+fragment TemplateReplCardFooterTeam on Team {
+  id
+  username
+  image
+  url
+  __typename
+}
+
+fragment SearchPageResultsPost on Post {
+  id
+  ...ReplPostPost
+  ...ReplCardPostPost
+  ...OldPostPost
+  __typename
+}
+
+fragment ReplPostPost on Post {
+  id
+  title
+  timeCreated
+  isPinned
+  isAnnouncement
+  ...ReplViewPostActionPermissions
+  replComment {
+    id
+    body(removeMarkdown: true)
+    __typename
+  }
+  repl {
+    id
+    ...ReplViewReplActionsPermissions
+    ...ReplPostRepl
+    __typename
+  }
+  user {
+    id
+    ...ReplPostUserPostUser
+    __typename
+  }
+  recentReplComments {
+    id
+    ...ReplPostReplComment
+    __typename
+  }
+  __typename
+}
+
+fragment ReplViewPostActionPermissions on Post {
+  id
+  isHidden
+  __typename
+}
+
+fragment ReplViewReplActionsPermissions on Repl {
+  id
+  slug
+  lastPublishedAt
+  publishedAs
+  owner {
+    ... on User {
+      id
+      username
+      __typename
+    }
+    ... on Team {
+      id
+      username
+      __typename
+    }
+    __typename
+  }
+  templateReview {
+    id
+    promoted
+    __typename
+  }
+  currentUserPermissions {
+    publish
+    containerWrite
+    __typename
+  }
+  ...UnpublishReplRepl
+  ...ReplLinkRepl
+  __typename
+}
+
+fragment UnpublishReplRepl on Repl {
+  id
+  commentCount
+  likeCount
+  runCount
+  publishedAs
+  __typename
+}
+
+fragment ReplPostRepl on Repl {
+  id
+  ...ReplPostReplInfoRepl
+  ...LikeButtonRepl
+  ...ReplStatsRepl
+  tags {
+    id
+    ...PostsFeedNavTag
+    __typename
+  }
+  __typename
+}
+
+fragment LikeButtonRepl on Repl {
+  id
+  currentUserDidLike
+  likeCount
+  url
+  wasPosted
+  wasPublished
+  __typename
+}
+
+fragment ReplPostUserPostUser on User {
+  id
+  username
+  image
+  ...UserLinkUser
+  __typename
+}
+
+fragment UserLinkUser on User {
+  id
+  url
+  username
+  __typename
+}
+
+fragment ReplPostReplComment on ReplComment {
+  id
+  body
+  timeCreated
+  user {
+    id
+    ...ReplPostRecentCommentUser
+    __typename
+  }
+  __typename
+}
+
+fragment ReplPostRecentCommentUser on User {
+  id
+  username
+  image
+  ...UserLinkUser
+  __typename
+}
+
+fragment ReplCardPostPost on Post {
+  id
+  title
+  timeCreated
+  isPinned
+  isAnnouncement
+  ...ReplViewPostActionPermissions
+  repl {
+    id
+    ...ReplViewReplActionsPermissions
+    ...ReplCardPostRepl
+    __typename
+  }
+  recentReplComments {
+    id
+    ...ReplPostReplComment
+    __typename
+  }
+  user {
+    id
+    ...ReplPostUserPostUser
+    __typename
+  }
+  __typename
+}
+
+fragment ReplCardPostRepl on Repl {
+  id
+  ...LikeButtonRepl
+  ...ReplPostReplCardRepl
+  recentComments {
+    id
+    ...ReplPostReplComment
+    __typename
+  }
+  __typename
+}
+
+fragment OldPostPost on Post {
+  id
+  title
+  preview(removeMarkdown: true, length: 150)
+  url
+  commentCount
+  isPinned
+  isAnnouncement
+  timeCreated
+  ...PostLinkPost
+  user {
+    id
+    ...ReplPostUserPostUser
+    __typename
+  }
+  repl {
+    id
+    ...ReplPostRepl
+    __typename
+  }
+  board {
+    id
+    name
+    color
+    __typename
+  }
+  recentComments(count: 3) {
+    id
+    preview(removeMarkdown: true, length: 500)
+    timeCreated
+    user {
+      id
+      ...ReplPostRecentCommentUser
+      __typename
+    }
+    __typename
+  }
+  __typename
+}
+
+fragment PostLinkPost on Post {
+  id
+  url
+  __typename
+}
+
+fragment SearchPageResultsDoc on SearchResultIndexedDoc {
+  path
+  section
+  contents
+  contentMatches {
+    start
+    length
+    __typename
+  }
+  __typename
+}
+
+fragment SearchPageResultsFile on SearchResultIndexedFile {
+  repl {
+    id
+    title
+    iconUrl
+    url
+    owner {
+      ... on User {
+        id
+        image
+        username
+        __typename
+      }
+      ... on Team {
+        id
+        image
+        username
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  filePath
+  fileContents
+  fileContentMatches {
+    start
+    length
+    __typename
+  }
+  __typename
+}
