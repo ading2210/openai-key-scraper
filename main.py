@@ -4,6 +4,24 @@ import re
 import time
 import os
 
+copyright_notice = """
+ading2210/openai-key-scraper: a Python script to scrape OpenAI API keys that are exposed on public Replit projects
+Copyright (C) 2023 ading2210
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+""".strip()
+
 graphql_url = "https://replit.com/graphql"
 graphql_headers = {
   "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0",
@@ -108,6 +126,10 @@ def search_all_pages(query):
   return valid_keys
 
 if __name__ == "__main__":
+  print(copyright_notice)
+  input("\n======\n\nHit enter to continue and to confirm that you have read the copyright notice for this program. ")
+  print("\n======\n")
+
   if len(sys.argv) < 2:
     raise IndexError("Cookie not provided. Pass in your cookie as the next argument. Like 'python3 main.py \"cookie_here\"'")
   cookie = sys.argv[1]
