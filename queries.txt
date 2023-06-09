@@ -1,0 +1,19 @@
+chatgpt
+gpt-3.5-turbo
+openai
+gpt3
+gpt_4
+gpt4
+gpt
+ChatGPT
+GPT-3
+GPT-4
+OpenAI
+chatcompletion
+openai.ChatCompletion.create
+openai.Image.create
+response['data'][0]['url']
+openai.Audio.transcribe
+A sunlit indoor lounge area with a pool containing a flamingo
+openai.createImageVariation
+openai.Audio.translate
