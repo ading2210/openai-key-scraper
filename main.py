@@ -3,6 +3,7 @@ import sys
 import re
 import time
 import os
+import csv
 
 copyright_notice = """
 COPYRIGHT NOTICE:
@@ -43,9 +44,11 @@ with open("graphql/SearchPageSearchResults.graphql") as f:
   graphql_query = f.read()
 
 known_keys = []
-if os.path.exists("found_keys.txt"):
-  with open("found_keys.txt") as f:
-    known_keys = f.read().strip().split("\n")
+if os.path.exists("found_keys.csv"):
+  with open("found_keys.csv") as f:
+    reader = csv.DictReader(f)
+    for row in reader:
+      known_keys.append(row["key"])
 
 def perform_search(query, page, sort):
   payload = [{
@@ -74,7 +77,6 @@ def perform_search(query, page, sort):
 
   r = requests.post(graphql_url, headers=graphql_headers, json=payload)
   data = r.json()
-  #print(data)
   search = data[0]["data"]["search"]
   if not "fileResults" in search:
     if "message" in search:
@@ -111,11 +113,12 @@ def validate_key(key):
   expiration = subscription["access_until"]
   if expiration < time.time():
     return False #token expired
-  hard_limit = subscription["hard_limit_usd"]
+  hard_limit = subscription["hard_limit_usd"] or subscription["system_hard_limit_usd"]
   plan_id = subscription["plan"]["id"]
   payment_method = subscription["has_payment_method"]
 
   return {
+    "key": key,
     "gpt4_allowed": gpt_4,
     "plan": plan_id,
     "limit": hard_limit,
@@ -123,9 +126,15 @@ def validate_key(key):
     "expiration": expiration
   }
 
-def log_key(key):
-  with open("found_keys.txt", "a") as f:
-    f.write(key + "\n")
+def log_key(key_info):
+  exists = os.path.exists("found_keys.csv")
+  with open("found_keys.csv", "a") as f:
+    writer = csv.DictWriter(f, fieldnames=key_info.keys())
+    
+    if not exists:
+      writer.writeheader()
+
+    writer.writerow(key_info)
 
 def search_all_pages(query):
   found_keys = []
@@ -140,15 +149,16 @@ def search_all_pages(query):
         continue
       if key in known_keys:
         print(f"Found working key (cached): {key}")
+        continue
       
       key_info = validate_key(key)
       if not key_info:
         continue
       
       valid_keys.append(key)
-      log_key(key)
+      log_key(key_info)
       found_message = "Found working key: {key} (gpt4: {gpt4_allowed}, plan: {plan}, limit: {limit}, payment method: {payment_method}, expiration: {expiration})"
-      print(found_message.format(key=key, **key_info))
+      print(found_message.format(**key_info))
     
     found_keys += keys
 
@@ -168,7 +178,8 @@ if __name__ == "__main__":
     query = sys.argv[2]
   else:
     query = "sk- openai"
+    print("Warning: search query not provided, falling back to hard coded default")
 
   print(f"Searching with query: {query}")
   all_keys = search_all_pages(query)
-  print("Search complete. Check found_keys.txt for results.")
+  print("Search complete. Check found_keys.csv for results.")

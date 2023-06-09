@@ -18,8 +18,9 @@ python3 main.py "TOKEN_HERE"
 
 It is recommended that you set a custom search query. You can do that by passing another argument into the script, like in the following example:
 ```
-python3 main.py "TOKEN" "chatgpt sk-"
+python3 main.py "TOKEN" "sk- chatgpt"
 ```
+Make sure your queries always have `sk-` at the beginning. For best results, include terms that are likely to show up in code that uses the OpenAI API.
 
 ## Copyright:
 This program is licensed under the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.txt).
