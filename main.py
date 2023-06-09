@@ -139,7 +139,7 @@ def log_key(key_info):
 def search_all_pages(query):
   found_keys = []
   valid_keys = []
-  for page in range(1, 21):
+  for page in range(1, 20):
     print(f"Checking page {page}...")
     keys = perform_search(query, page, "RecentlyModified")
     print(f"Found {len(keys)} matches (not validated)")
@@ -165,21 +165,27 @@ def search_all_pages(query):
   return valid_keys
 
 if __name__ == "__main__":
-  print(copyright_notice)
-  input("\n======\n\nHit enter to continue and to confirm that you have read the copyright notice for this program. ")
-  print("\n======\n")
+    print(copyright_notice)
+    input("\n======\n\nHit enter to continue and to confirm that you have read the copyright notice for this program. ")
+    print("\n======\n")
 
-  if len(sys.argv) < 2:
-    raise IndexError("Cookie not provided. Pass in your cookie as the next argument. Like 'python3 main.py \"cookie_here\"'")
-  cookie = sys.argv[1]
-  graphql_headers["Cookie"] = cookie
+    if len(sys.argv) < 2:
+        raise IndexError("Cookie not provided. Pass in your cookie as the next argument. Like 'python3 main.py \"cookie_here\"'")
+    cookie = sys.argv[1]
+    graphql_headers["Cookie"] = cookie
 
-  if len(sys.argv) > 2:
-    query = sys.argv[2]
-  else:
-    query = "sk- openai"
-    print("Warning: search query not provided, falling back to hard coded default")
+    queries_file = "queries.txt"
 
-  print(f"Searching with query: {query}")
-  all_keys = search_all_pages(query)
-  print("Search complete. Check found_keys.csv for results.")
+    with open(queries_file, "r") as f:
+        queries = f.readlines()
+
+    print(f"Total queries: {len(queries)}")
+    print("Searching...")
+    for query in queries:
+        query = query.strip()
+        print(f"Searching with query: {query}")
+        all_keys = search_all_pages(query)
+        all_keys = search_all_pages("sk- " + query)
+        print("Search complete. Check found_keys.csv for results.")
+
+    print("All searches completed.")
